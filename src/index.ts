@@ -1,7 +1,10 @@
+type TokenPositionFrom = number;
+type TokenPositionTo = number;
+
 type TokenIndex = number;
-type TokenPosition = [number, number];
 type TokenType = string;
 type TokenValue = string;
+type TokenPosition = [TokenPositionFrom, TokenPositionTo];
 
 type KnownRegexPatterns = TokenizeLetter | TokenizeMark | TokenizeSeparator | TokenizeSymbol | TokenizeNumber | TokenizePunctuation | TokenizeOther | TokenizeWord;
 
@@ -193,10 +196,10 @@ export class Tokenizer implements ITokenizer {
             for (const rule of this._rules) {
                 if (rule.regex.test(char)) {
 
-                    let value: string = char;
+                    let value: TokenValue = char;
                     let position: TokenPosition = [cursor, cursor + 1];
 
-                    const type: string = rule.type;
+                    const type: TokenType = rule.type;
 
                     if (rule.shouldCaptureGroup) {
                         let end = cursor + 1;
