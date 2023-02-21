@@ -153,9 +153,9 @@ export class Tokenizer implements ITokenizer {
     constructor(rules?: Rule[]) {
         this.r = rules ? rules : [
             Tokenizer.captureGroup({ word: TokenizeLetter.ALL }),
-            Tokenizer.captureGroup({ number: TokenizeNumber.ALL }),
             Tokenizer.captureMono({ space: TokenizeSeparator.ALL }),
             Tokenizer.captureMono({ punctuation: TokenizePunctuation.ALL }),
+            Tokenizer.captureGroup({ number: TokenizeNumber.ALL }),
             Tokenizer.captureGroup({ symbol: TokenizeSymbol.ALL }),
         ];
     }
@@ -188,17 +188,18 @@ export class Tokenizer implements ITokenizer {
             return [];
         }
         const tokens: Token[] = [];
-        const size = text.length;
+        const size: number = text.length;
+        const rulesAmount: number = this._rules.length;
 
         for (let cursor = 0; cursor < size; cursor++) {
             const char = text[cursor];
 
-            for (const rule of this._rules) {
-                if (rule.regex.test(char)) {
+            for (let i = 0; i < rulesAmount; i++) {
+                const rule = this._rules[i];
 
+                if (rule.regex.test(char)) {
                     let value: TokenValue = char;
                     let position: TokenPosition = [cursor, cursor + 1];
-
                     const type: TokenType = rule.type;
 
                     if (rule.shouldCaptureGroup) {
