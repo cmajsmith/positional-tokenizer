@@ -6,7 +6,7 @@
   "scripts": {
     "test": "jest --maxWorkers=50% --config jestconfig.json",
     "test-watch": "jest --watch --maxWorkers=25% --config jestconfig.json",
-    "build": "npm run test && tsup src/index.ts --format cjs,esm --dts --clean --minify"
+    "build": "tsup src/index.ts --format cjs,esm --dts --clean --minify"
   },
   "keywords": [],
   "author": "",
