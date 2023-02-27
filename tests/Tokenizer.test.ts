@@ -25,7 +25,7 @@ test('Sanity One', () => {
 });
 test('Sanity Two', () => {
     const tokenizer = new Tokenizer();
-    const text = "Marry had a little lamb."
+    const text = "Mary had a little lamb."
 
     const rules_1 = [
         Tokenizer.ruleMono({space: TokenizeSeparator.ALL}),
