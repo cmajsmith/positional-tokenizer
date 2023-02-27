@@ -8,9 +8,7 @@ type TokenPosition = [TokenPositionFrom, TokenPositionTo];
 
 type KnownRegexPatterns = TokenizeLetter | TokenizeMark | TokenizeSeparator | TokenizeSymbol | TokenizeNumber | TokenizePunctuation | TokenizeOther | TokenizeWord;
 
-interface TokenizerRule {
-    [type: TokenType]: KnownRegexPatterns | RegExp;
-}
+type TokenizerRule = Record<TokenType, KnownRegexPatterns | RegExp>
 
 interface PositionalTokenizer {
     tokenize: (text: string) => Token[];
@@ -138,8 +136,13 @@ class TokenizerBakedRule {
 
     constructor(rule: TokenizerRule, captureMulti?: boolean){
         const keys = Object.keys(rule);
+
+        if (!keys.length) throw new Error("Omitting the rule that has no type");
+
         const ruleType = keys[0];
         const regex = rule[ruleType];
+
+        if (!regex) throw new Error("Omitting the rule that has no value");
 
         this.t = ruleType;
         this.r = TokenizerBakedRule.toRegex(regex);
@@ -168,14 +171,9 @@ class TokenizerBakedRule {
 export class Tokenizer implements PositionalTokenizer {
     private r: TokenizerBakedRule[];
 
-    constructor(rules?: TokenizerBakedRule[]) {
-        this.r = rules ? rules : [
-            Tokenizer.ruleMulti({ word: TokenizeLetter.ALL }),
-            Tokenizer.ruleMono({ space: TokenizeSeparator.ALL }),
-            Tokenizer.ruleMono({ punctuation: TokenizePunctuation.ALL }),
-            Tokenizer.ruleMulti({ number: TokenizeNumber.ALL }),
-            Tokenizer.ruleMulti({ symbol: TokenizeSymbol.ALL }),
-        ];
+    constructor(rules?: Array<TokenizerBakedRule|null>) {
+        const rulesToApply = rules || Tokenizer.getDefaultRules();
+        this.r = rulesToApply.filter(r => Boolean(r)) as TokenizerBakedRule[];
     }
 
     private get rules(): TokenizerBakedRule[] {
@@ -186,16 +184,36 @@ export class Tokenizer implements PositionalTokenizer {
         return typeof text === 'string' || text instanceof String;
     }
 
-    public static ruleMono(rule: TokenizerRule): TokenizerBakedRule {
-        return new TokenizerBakedRule(rule);
+    private static getDefaultRules(): Array<TokenizerBakedRule | null> {
+        return [
+            Tokenizer.ruleMulti({ word: TokenizeLetter.ALL }),
+            Tokenizer.ruleMono({ space: TokenizeSeparator.ALL }),
+            Tokenizer.ruleMono({ punctuation: TokenizePunctuation.ALL }),
+            Tokenizer.ruleMulti({ number: TokenizeNumber.ALL }),
+            Tokenizer.ruleMulti({ symbol: TokenizeSymbol.ALL })
+        ];
     }
 
-    public static ruleMulti(rule: TokenizerRule): TokenizerBakedRule {
-        return new TokenizerBakedRule(rule, true);
+    public static ruleMono(rule: TokenizerRule): TokenizerBakedRule | null {
+        try {
+            return new TokenizerBakedRule(rule);
+        } catch (e) {
+            console.warn(e);
+            return null;
+        }
     }
 
-    update(rules: TokenizerBakedRule[]): PositionalTokenizer {
-        this.r = rules;
+    public static ruleMulti(rule: TokenizerRule): TokenizerBakedRule | null {
+        try {
+            return new TokenizerBakedRule(rule, true);
+        } catch (e) {
+            console.warn(e);
+            return null;
+        }
+    }
+
+    update(rules: Array<TokenizerBakedRule|null>): PositionalTokenizer {
+        this.r = rules.filter(r => Boolean(r)) as TokenizerBakedRule[];
         return this;
     }
 
