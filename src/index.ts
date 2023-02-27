@@ -8,13 +8,20 @@ type TokenPosition = [TokenPositionFrom, TokenPositionTo];
 
 type KnownRegexPatterns = TokenizeLetter | TokenizeMark | TokenizeSeparator | TokenizeSymbol | TokenizeNumber | TokenizePunctuation | TokenizeOther | TokenizeWord;
 
-interface TokenizerInstruction {
+interface TokenizerRule {
     [type: TokenType]: KnownRegexPatterns | RegExp;
 }
 
-interface ITokenizer {
+interface PositionalTokenizer {
     tokenize: (text: string) => Token[];
-    update: (rules: Rule[]) => ITokenizer;
+    update: (rules: TokenizerBakedRule[]) => PositionalTokenizer;
+}
+
+type TokenJSON = {
+    index: TokenIndex,
+    type: TokenType,
+    value: TokenValue,
+    position: TokenPosition
 }
 
 enum TokenizeLetter {
@@ -48,6 +55,7 @@ enum TokenizeSymbol {
     MODIFIER = "Sk",
     OTHER = "So"
 }
+
 enum TokenizeNumber {
     ALL = "N",
     DECIMAL_DIGIT = "Nd",
@@ -81,10 +89,10 @@ enum TokenizeWord {
 }
 
 export class Token {
-    readonly i: TokenIndex;
-    readonly t: TokenType;
-    readonly v: TokenValue;
-    readonly p: TokenPosition;
+    private readonly i: TokenIndex;
+    private readonly t: TokenType;
+    private readonly v: TokenValue;
+    private readonly p: TokenPosition;
 
     constructor(i: TokenIndex, type: TokenType, value: TokenValue, position: TokenPosition) {
         this.i = i;
@@ -93,116 +101,124 @@ export class Token {
         this.p = position;
     }
 
-    get position(): TokenPosition {
-        return this.p;
-    };
-    get type(): TokenType {
-        return this.t;
-    };
-    get value(): TokenValue {
-        return this.v;
-    };
     get index(): TokenIndex {
         return this.i;
     };
 
-    toString() {
+    get type(): TokenType {
+        return this.t;
+    };
+
+    get value(): TokenValue {
+        return this.v;
+    };
+
+    get position(): TokenPosition {
+        return this.p;
+    };
+
+    toString(): string {
         return `${this.v}`;
     }
 
-    toJSON() {
+    toJSON(): TokenJSON {
         return {
+            index: this.i,
             type: this.t,
             value: this.v,
-            position: this.p,
-            index: this.i
+            position: this.p
         }
     }
 }
 
-class Rule {
+class TokenizerBakedRule {
     r: RegExp;
     t: TokenType;
-    g: boolean;
+    m: boolean;
 
-    constructor(type: TokenType, regex: KnownRegexPatterns | RegExp, captureAsAGroup?: boolean) {
-        this.r = regex instanceof RegExp ? regex : Rule.toRegex(regex);
-        this.t = type;
-        this.g = captureAsAGroup || false;
+    constructor(rule: TokenizerRule, captureMulti?: boolean){
+        const keys = Object.keys(rule);
+        const ruleType = keys[0];
+        const regex = rule[ruleType];
+
+        this.t = ruleType;
+        this.r = TokenizerBakedRule.toRegex(regex);
+        this.m = captureMulti || false;
     }
 
-    private static toRegex = (patternStr: KnownRegexPatterns) => {
-        const pattern = patternStr === TokenizeWord.COMPLEX ? TokenizeWord.COMPLEX : `\\p{${patternStr}}`;
+    private static toRegex = (regex: KnownRegexPatterns | RegExp): RegExp => {
+        if (regex instanceof RegExp) return regex;
+        const pattern = regex === TokenizeWord.COMPLEX ? TokenizeWord.COMPLEX : `\\p{${regex}}`;
         return new RegExp(pattern, "u");
     }
 
     get regex(): RegExp {
         return this.r;
     };
+
     get type(): TokenType {
         return this.t;
     };
-    get shouldCaptureGroup(): boolean {
-        return this.g;
+
+    get shouldCaptureMulti(): boolean {
+        return this.m;
     };
 }
 
-export class Tokenizer implements ITokenizer {
-    r: Rule[];
+export class Tokenizer implements PositionalTokenizer {
+    private r: TokenizerBakedRule[];
 
-    constructor(rules?: Rule[]) {
+    constructor(rules?: TokenizerBakedRule[]) {
         this.r = rules ? rules : [
-            Tokenizer.captureGroup({ word: TokenizeLetter.ALL }),
-            Tokenizer.captureMono({ space: TokenizeSeparator.ALL }),
-            Tokenizer.captureMono({ punctuation: TokenizePunctuation.ALL }),
-            Tokenizer.captureGroup({ number: TokenizeNumber.ALL }),
-            Tokenizer.captureGroup({ symbol: TokenizeSymbol.ALL }),
+            Tokenizer.ruleMulti({ word: TokenizeLetter.ALL }),
+            Tokenizer.ruleMono({ space: TokenizeSeparator.ALL }),
+            Tokenizer.ruleMono({ punctuation: TokenizePunctuation.ALL }),
+            Tokenizer.ruleMulti({ number: TokenizeNumber.ALL }),
+            Tokenizer.ruleMulti({ symbol: TokenizeSymbol.ALL }),
         ];
     }
 
-    public static captureMono(instruction: TokenizerInstruction): Rule {
-        const type = Object.keys(instruction)[0];
-        return new Rule(type, instruction[type]);
-    }
-
-    public static captureGroup(instruction: TokenizerInstruction): Rule {
-        const type = Object.keys(instruction)[0];
-        return new Rule(type, instruction[type], true);
-    }
-
-    get _rules(): Rule[] {
+    private get rules(): TokenizerBakedRule[] {
         return this.r;
     }
 
-    update(rules: Rule[]) {
+    private static isString(text: any): boolean {
+        return typeof text === 'string' || text instanceof String;
+    }
+
+    public static ruleMono(rule: TokenizerRule): TokenizerBakedRule {
+        return new TokenizerBakedRule(rule);
+    }
+
+    public static ruleMulti(rule: TokenizerRule): TokenizerBakedRule {
+        return new TokenizerBakedRule(rule, true);
+    }
+
+    update(rules: TokenizerBakedRule[]): PositionalTokenizer {
         this.r = rules;
         return this;
     }
 
-    isString(text: any): boolean {
-        return typeof text === 'string' || text instanceof String;
-    }
-
     tokenize(text: string): Token[] {
-        if (!this.isString(text)) {
+        if (!Tokenizer.isString(text)) {
             return [];
         }
         const tokens: Token[] = [];
         const size: number = text.length;
-        const rulesAmount: number = this._rules.length;
+        const rulesAmount: number = this.rules.length;
 
         for (let cursor = 0; cursor < size; cursor++) {
             const char = text[cursor];
 
             for (let i = 0; i < rulesAmount; i++) {
-                const rule = this._rules[i];
+                const rule = this.rules[i];
 
                 if (rule.regex.test(char)) {
                     let value: TokenValue = char;
                     let position: TokenPosition = [cursor, cursor + 1];
                     const type: TokenType = rule.type;
 
-                    if (rule.shouldCaptureGroup) {
+                    if (rule.shouldCaptureMulti) {
                         let end = cursor + 1;
                         while (end < size) {
                             const nextChar = text[end];

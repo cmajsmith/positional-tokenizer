@@ -28,29 +28,29 @@ test('Sanity Two', () => {
     const text = "Marry had a little lamb."
 
     const rules_1 = [
-        Tokenizer.captureMono({space: TokenizeSeparator.ALL}),
-        Tokenizer.captureMono({punct: TokenizePunctuation.ALL}),
-        Tokenizer.captureGroup({word: TokenizeLetter.ALL})
+        Tokenizer.ruleMono({space: TokenizeSeparator.ALL}),
+        Tokenizer.ruleMono({punct: TokenizePunctuation.ALL}),
+        Tokenizer.ruleMulti({word: TokenizeLetter.ALL})
     ];
     const rules_2 = [
-        Tokenizer.captureMono({punct: TokenizePunctuation.ALL}),
-        Tokenizer.captureMono({space: TokenizeSeparator.ALL}),
-        Tokenizer.captureGroup({word: TokenizeWord.SIMPLE})
+        Tokenizer.ruleMono({punct: TokenizePunctuation.ALL}),
+        Tokenizer.ruleMono({space: TokenizeSeparator.ALL}),
+        Tokenizer.ruleMulti({word: TokenizeWord.SIMPLE})
     ];
     const rules_3 = [
-        Tokenizer.captureMono({punct: TokenizePunctuation.ALL}),
-        Tokenizer.captureGroup({word: TokenizeWord.SIMPLE}),
-        Tokenizer.captureMono({space: TokenizeSeparator.ALL}),
+        Tokenizer.ruleMono({punct: TokenizePunctuation.ALL}),
+        Tokenizer.ruleMulti({word: TokenizeWord.SIMPLE}),
+        Tokenizer.ruleMono({space: TokenizeSeparator.ALL}),
     ];
     const rules_4 = [
-        Tokenizer.captureGroup({word: TokenizeWord.SIMPLE}),
-        Tokenizer.captureMono({punct: TokenizePunctuation.ALL}),
-        Tokenizer.captureMono({space: TokenizeSeparator.ALL}),
+        Tokenizer.ruleMulti({word: TokenizeWord.SIMPLE}),
+        Tokenizer.ruleMono({punct: TokenizePunctuation.ALL}),
+        Tokenizer.ruleMono({space: TokenizeSeparator.ALL}),
     ];
     const rules_5 = [
-        Tokenizer.captureGroup({word: TokenizeWord.SIMPLE}),
-        Tokenizer.captureMono({space: TokenizeSeparator.ALL}),
-        Tokenizer.captureMono({punct: TokenizePunctuation.ALL}),
+        Tokenizer.ruleMulti({word: TokenizeWord.SIMPLE}),
+        Tokenizer.ruleMono({space: TokenizeSeparator.ALL}),
+        Tokenizer.ruleMono({punct: TokenizePunctuation.ALL}),
     ];
 
     const ruleRoulette = [rules_1, rules_3, rules_2, rules_5, rules_4];
@@ -67,9 +67,9 @@ test('Sanity Two', () => {
 });
 test('Hyphenated Words: devil-grass', () => {
     const tokenizer = new Tokenizer([
-        Tokenizer.captureGroup({word: TokenizeWord.COMPLEX}),
-        Tokenizer.captureMono({space: TokenizeSeparator.ALL}),
-        Tokenizer.captureMono({punct: TokenizePunctuation.ALL})
+        Tokenizer.ruleMulti({word: TokenizeWord.COMPLEX}),
+        Tokenizer.ruleMono({space: TokenizeSeparator.ALL}),
+        Tokenizer.ruleMono({punct: TokenizePunctuation.ALL})
     ]);
     const text = "...and the devil-grass which brought sweet dreams,"
     const tokens = tokenizer.tokenize(text);
@@ -87,9 +87,9 @@ test('Default Apostrophes', () => {
 });
 test('Word Contractions', () => {
     const tokenizer = new Tokenizer([
-        Tokenizer.captureGroup({word: TokenizeWord.COMPLEX}),
-        Tokenizer.captureMono({space: TokenizeSeparator.ALL}),
-        Tokenizer.captureMono({punctuation: TokenizePunctuation.ALL})
+        Tokenizer.ruleMulti({word: TokenizeWord.COMPLEX}),
+        Tokenizer.ruleMono({space: TokenizeSeparator.ALL}),
+        Tokenizer.ruleMono({punctuation: TokenizePunctuation.ALL})
     ]);
     const text = "He'll stay so I'll stay.";
     const tokens = tokenizer.tokenize(text);
@@ -104,9 +104,9 @@ test('Word Contractions', () => {
 });
 test('With Umlaut', () => {
     const tokenizer = new Tokenizer([
-        Tokenizer.captureGroup({word: TokenizeWord.COMPLEX}),
-        Tokenizer.captureMono({space: TokenizeSeparator.ALL}),
-        Tokenizer.captureMono({punctuation: TokenizePunctuation.ALL})
+        Tokenizer.ruleMulti({word: TokenizeWord.COMPLEX}),
+        Tokenizer.ruleMono({space: TokenizeSeparator.ALL}),
+        Tokenizer.ruleMono({punctuation: TokenizePunctuation.ALL})
     ]);
     const text = "Möbius strip.";
     const tokens = tokenizer.tokenize(text);
@@ -117,8 +117,8 @@ test('With Umlaut', () => {
 })
 test('With Custom Regex', () => {
     const tokenizer = new Tokenizer([
-        Tokenizer.captureMono({period: new RegExp('\\.')}),
-        Tokenizer.captureMono({umlaut: new RegExp('[öüä]')}),
+        Tokenizer.ruleMono({period: new RegExp('\\.')}),
+        Tokenizer.ruleMono({umlaut: new RegExp('[öüä]')}),
     ]);
     const text = "Des Teufels liebstes Möbelstück ist die lange Bank.";
     const tokens = tokenizer.tokenize(text);
