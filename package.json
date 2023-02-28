@@ -1,16 +1,23 @@
 {
   "name": "positional-tokenizer",
-  "version": "0.0.0-development",
-  "description": "",
+  "version": "0.0.0",
+  "description": "Tokenizes a text using regex rules and returns the tokens with their positions in the text given.",
   "main": "index.js",
+  "keywords": ["tokenizer", "tokenize", "parser", "regex", "regexp", "token", "tokens"],
+  "author": "Serhii Kovalenko",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/cmajsmith/positional-tokenizer/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cmajsmith/positional-tokenizer.git"
+  },
   "scripts": {
     "test": "jest --maxWorkers=50% --config jestconfig.json",
     "test-watch": "jest --watch --maxWorkers=25% --config jestconfig.json",
     "build": "tsup src/index.ts --format cjs,esm --dts --clean --minify"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
   "devDependencies": {
     "@swc/jest": "^0.2.24",
     "@types/jest": "^29.4.0",
