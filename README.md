@@ -1,4 +1,6 @@
-# Positional Tokenizer
+# Positional Tokenizer  [![npm version](https://badge.fury.io/js/positional-tokenizer.svg)](https://badge.fury.io/js/positional-tokenizer)
+
+
 
 Turns a text like `Mary had a little lamb.` into an array of tokens:
 ```typescript
