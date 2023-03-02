@@ -1,6 +1,6 @@
 {
   "name": "positional-tokenizer",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "Tokenizes a text using regex rules and returns the tokens with their positions in the text given.",
   "main": "dist/index.js",
   "keywords": ["tokenizer", "tokenize", "parser", "regex", "regexp", "token", "tokens"],
