@@ -1,6 +1,6 @@
-# Positional Tokenizer  [![npm version](https://badge.fury.io/js/positional-tokenizer.svg)](https://badge.fury.io/js/positional-tokenizer)
-
-
+# Positional Tokenizer
+---
+[![npm version](https://badge.fury.io/js/positional-tokenizer.svg)](https://badge.fury.io/js/positional-tokenizer)
 
 Turns a text like `Mary had a little lamb.` into an array of tokens:
 ```typescript
@@ -114,14 +114,15 @@ const tokens: Token[] = tokenizer.tokenize(text);
 ```
 ### Examples
 #### Tokenize a text into words and spaces
+
 ```typescript
-import {Tokenizer, Token, TokenizeSeparator, TokenizeWord} from 'positional-tokenizer';
+import {Tokenizer, Token, TokenizeSeparator, TokenizeLetter} from 'positional-tokenizer';
 
 const text = "Mary had a little lamb.";
 
 const tokenizer = new Tokenizer([
-    Tokenizer.ruleMono({space: TokenizeSeparator.ALL}),
-    Tokenizer.ruleMulti({word: TokenizeWord.ALL})
+    Tokenizer.ruleMulti({word: TokenizeLetter.ALL}),
+    Tokenizer.ruleMono({space: TokenizeSeparator.ALL})
 ]);
 const tokens: Token[] = tokenizer.tokenize(text);
 ```
